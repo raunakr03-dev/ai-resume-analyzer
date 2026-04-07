@@ -4,7 +4,7 @@ import fitz
 import os
 
 # 🔑 API
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 st.set_page_config(page_title="AI Resume Analyzer")
 st.title("🚀 AI Resume Analyzer")
@@ -34,11 +34,7 @@ def analyze_text(text):
     {text}
     """
 
-    response = client.models.generate_content(
-        model="gemini-3-flash-preview",
-        contents=prompt
-    )
-
+    response = genai.GenerativeModel("gemini-3-flash-preview").generate_content(prompt)
     return response.text
 
 # ================= IMAGE =================
@@ -55,13 +51,10 @@ def analyze_image(file):
     4. ATS score
     """
 
-    response = client.models.generate_content(
-        model="gemini-3-flash-preview",
-        contents=[
-            prompt,
-            {"mime_type": "image/jpeg", "data": image_bytes}
-        ]
-    )
+    response = genai.GenerativeModel("gemini-3-flash-preview").generate_content([
+        prompt,
+        {"mime_type": "image/jpeg", "data": image_bytes}
+    ])
 
     return response.text
 
