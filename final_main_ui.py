@@ -3,76 +3,101 @@ import google.generativeai as genai
 import fitz
 import os
 
-# 🔑 API
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# 🔑 Configure API
+api_key = os.getenv("GEMINI_API_KEY")
 
-st.set_page_config(page_title="AI Resume Analyzer")
+if not api_key:
+    st.error("❌ API Key not found. Please set GEMINI_API_KEY in Streamlit Secrets.")
+    st.stop()
+
+genai.configure(api_key=api_key)
+
+st.set_page_config(page_title="AI Resume Analyzer", layout="centered")
 st.title("🚀 AI Resume Analyzer")
 
 target_job = st.text_input("🎯 Enter Target Job Role (optional)")
-uploaded_file = st.file_uploader("Upload Resume", type=["pdf", "png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("📄 Upload Resume", type=["pdf", "png", "jpg", "jpeg"])
 
 # ================= PDF =================
 def extract_pdf_text(file):
-    doc = fitz.open(stream=file.read(), filetype="pdf")
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    return text
+    try:
+        doc = fitz.open(stream=file.read(), filetype="pdf")
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        return text
+    except:
+        return None
 
 def analyze_text(text):
-    prompt = f"""
-    Analyze this resume for the role: {target_job or "General"}.
+    try:
+        prompt = f"""
+        Analyze this resume for the role: {target_job or "General"}.
 
-    Give:
-    1. Strengths
-    2. Weaknesses
-    3. Improvements
-    4. ATS score
+        Give:
+        1. Strengths
+        2. Weaknesses
+        3. Improvements
+        4. ATS score (out of 100)
 
-    Resume:
-    {text}
-    """
+        Resume:
+        {text}
+        """
 
-    response = genai.GenerativeModel("gemini-3-flash-preview").generate_content(prompt)
-    return response.text
+        model = genai.GenerativeModel("gemini-3-flash-preview")
+        response = model.generate_content(prompt)
+
+        return response.text if response else "⚠️ No response from AI."
+
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
 
 # ================= IMAGE =================
 def analyze_image(file):
-    image_bytes = file.read()
+    try:
+        image_bytes = file.read()
 
-    prompt = f"""
-    Analyze this resume for the role: {target_job or "General"}.
+        prompt = f"""
+        Analyze this resume for the role: {target_job or "General"}.
 
-    Give:
-    1. Strengths
-    2. Weaknesses
-    3. Improvements
-    4. ATS score
-    """
+        Give:
+        1. Strengths
+        2. Weaknesses
+        3. Improvements
+        4. ATS score (out of 100)
+        """
 
-    response = genai.GenerativeModel("gemini-3-flash-preview").generate_content([
-        prompt,
-        {"mime_type": "image/jpeg", "data": image_bytes}
-    ])
+        model = genai.GenerativeModel("gemini-3-flash-preview")
 
-    return response.text
+        response = model.generate_content([
+            prompt,
+            {"mime_type": "image/jpeg", "data": image_bytes}
+        ])
+
+        return response.text if response else "⚠️ No response from AI."
+
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
 
 # ================= MAIN =================
 if uploaded_file:
-    st.success("File uploaded successfully ✅")
+    st.success("✅ File uploaded successfully")
 
     if "pdf" in uploaded_file.type:
         text = extract_pdf_text(uploaded_file)
-        st.text_area("Preview", text[:1000])
 
-        result = analyze_text(text)
+        if text:
+            st.text_area("📄 Resume Preview", text[:1000])
+            result = analyze_text(text)
+        else:
+            st.error("❌ Failed to read PDF file.")
+            st.stop()
 
     else:
-        st.image(uploaded_file)
+        st.image(uploaded_file, caption="Uploaded Resume")
         result = analyze_image(uploaded_file)
 
-    st.subheader("📊 Analysis")
+    st.subheader("📊 Analysis Result")
     st.markdown(result)
 
-    st.download_button("📥 Download", result, file_name="analysis.txt")
+    st.download_button("📥 Download Analysis", result, file_name="analysis.txt")
