@@ -34,10 +34,17 @@ def analyze_text(text):
         prompt = f"""
         Analyze this resume for the role: {target_job or "General"}.
 
+        Guidelines:
+        - Do NOT assume dates are incorrect unless clearly unrealistic.
+        - Treat past, present, or ongoing dates as valid.
+        - Avoid false assumptions or labeling something as a "red flag" unnecessarily.
+        - Focus on constructive, realistic, and helpful feedback.
+        - Avoid harsh or misleading statements.
+
         Give:
         1. Strengths
         2. Weaknesses
-        3. Improvements
+        3. Improvements (actionable suggestions)
         4. ATS score (out of 100)
 
         Resume:
@@ -60,10 +67,17 @@ def analyze_image(file):
         prompt = f"""
         Analyze this resume for the role: {target_job or "General"}.
 
+        Guidelines:
+        - Do NOT assume dates are incorrect unless clearly unrealistic.
+        - Treat past, present, or ongoing dates as valid.
+        - Avoid false assumptions or labeling something as a "red flag" unnecessarily.
+        - Focus on constructive, realistic, and helpful feedback.
+        - Avoid harsh or misleading statements.
+
         Give:
         1. Strengths
         2. Weaknesses
-        3. Improvements
+        3. Improvements (actionable suggestions)
         4. ATS score (out of 100)
         """
 
